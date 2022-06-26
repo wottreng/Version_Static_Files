@@ -1,7 +1,7 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+#!/usr/bin/python3
+"""
+Purpose: version static file names based on current git commit change history
+"""
 import os
 import datetime
 
@@ -15,11 +15,15 @@ def main(VERBOSE: bool = False):
     # list all files in directory recursively
     file_list = list_all_files_in_directory(FILES_DIRECTORY)
 
+    # get list of modified files from git
+    git_modified_files_list = get_list_of_changed_files_from_git()
+
     # print files list
     if VERBOSE: print_files_in_list(file_list)
 
     # version all changed static files in the directory
-    version_changed_files(file_list, MAX_FILE_DATE)
+    # version_changed_files(file_list, MAX_FILE_DATE)
+    version_changed_commit_files(file_list, git_modified_files_list)
 
     print("\n[MAIN] versioning finished")
 
@@ -43,6 +47,18 @@ def list_all_files_in_directory(directory: str) -> list:
     return files_list
 
 
+def get_list_of_changed_files_from_git() -> list:
+    modified_files_list = []
+    # get list of modified files from git
+    git_file_list = os.popen("git diff --name-only").read().split("\n")
+    for file in git_file_list:
+        file_extension = os.path.splitext(file)[1]
+        if "static" in file and file_extension in [".js", ".css", ".html"]:
+            modified_files_list.append(os.path.split(file)[1])
+    print("[MAIN] list of modified files from git:")
+    print_files_in_list(modified_files_list)
+    return modified_files_list
+
 def version_changed_files(files_list: list, version_files_after_data: str) -> None:
     """
     version all changed static files in the directory
@@ -63,6 +79,17 @@ def version_changed_files(files_list: list, version_files_after_data: str) -> No
                 os.rename(file["file_path"], file["file_path"].replace(file["file_version"], new_file_version))
 
 
+def version_changed_commit_files(file_list: list, git_modified_files_list: list) -> None:
+    for file in git_modified_files_list:
+        for file_info in file_list:
+            if file == file_info["file_name"]:
+                print("[INFO] file to be versioned: " + file_info["file_name"])
+                new_file_version = datetime.datetime.now().strftime("%d%b%Y")
+                new_file_name = file_info["file_name"].split("-")[0] + "-" + new_file_version + file_info["file_extension"]
+                print("[-->] new file name: ", new_file_name)
+                # os.rename(file_info["file_path"], file_info["file_path"].replace(file_info["file_version"], new_file_version))
+                break
+
 def convert_date_to_epoch_timestamp(date_str: str) -> int:
     """
     convert date to epoch timestamp
@@ -76,9 +103,9 @@ def convert_date_to_epoch_timestamp(date_str: str) -> int:
 
 
 def print_files_in_list(files_list: list):
-    print("\nFiles list:")
     for file in files_list:
         print(file)
+    print("-------------")
 
 
 # Press the green button in the gutter to run the script.
