@@ -87,8 +87,9 @@ def version_changed_commit_files(file_list: list, git_modified_files_list: list)
                 new_file_version = datetime.datetime.now().strftime("%d%b%Y")
                 new_file_name = file_info["file_name"].split("-")[0] + "-" + new_file_version + file_info["file_extension"]
                 print("[-->] new file name: ", new_file_name)
-                # os.rename(file_info["file_path"], file_info["file_path"].replace(file_info["file_version"], new_file_version))
+                os.rename(file_info["file_path"], file_info["file_path"].replace(file_info["file_version"], new_file_version))
                 break
+    print("-------------")
 
 def convert_date_to_epoch_timestamp(date_str: str) -> int:
     """
